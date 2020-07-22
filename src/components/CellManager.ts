@@ -1,4 +1,5 @@
 import Cell from "./Cell";
+import { seed } from "./start.json";
 
 export default class CellManager {
 
@@ -19,43 +20,36 @@ export default class CellManager {
     }
 
     /**
-     * Get all neighbors of a given cell in a 3x3 area.
+     * Get all the neighbours of a given cell in a 3x3 area.
      *
      * @param row the row of the given cell
      * @param col the column of the given cell
-     * @population the grid in which the cell is located
+     * @returns the number of live neighbours
      */
-    public getLiveNeighbours(row: number, col: number): Set<Cell> {
-        const list: Set<Cell> = new Set<Cell>();
-        let temp: Cell;
+    public getLiveNeighbours(row: number, col: number): number {
+        let neighbours = 0;
         for (let i = -1; i <= 1; i++) {
             for (let j = -1; j <= 1; j++) {
-                if (row + i >= 0 && col + j >= 0 && col + j < this.size && row + i < this.size)
-                    if (row !== (row + i) || col !== (col + j)) {
-                        temp = this._cells[row + i][col + j];
-                        if (temp.alive)
-                            list.add(temp);
+                if (row + i >= 0 && col + j >= 0 && col + j < this.size && row + i < this.size) { // Edges verification
+                    if (row !== (row + i) || col !== (col + j)) { // Excludes the given cell
+                        if (this._cells[row + i][col + j].alive) // Increment the counter if the neighbour is alive
+                            neighbours++;
                     }
+                }
             }
         }
-        return list;
-    }
-
-    /**
-     * For manual seeding.
-     * Switch the state of a given cell.
-     * @param i the index of the cell in the current generation.
-     */
-    public switchCell(i: number): void {
-        const cell: Cell = this._cells[i % this.size][i];
-        cell.switch(!cell.alive);
+        return neighbours;
     }
 
     /**
      * Creates the seed of the game.
      */
     public fill(): void {
-        this._cells = [...this._cells].map((_, row) => [...new Array<Cell>(this.size)].map((_, col) => new Cell(row, col)));
+        this._cells = [...this._cells].map((_, row) => [...new Array<Cell>(this.size)].map((_, col) => {
+            const c: Cell = new Cell(row, col);
+            if ([...seed].find((e: Array<number>) => c.row === e[0] && c.col === e[1])) c.switch(true);
+            return c;
+        }));
     }
 
     /**
@@ -80,12 +74,10 @@ export default class CellManager {
             holder[row] = new Array<number>();
             for (let col = 0; col < this.size; col++) {
                 cell = this._cells[row][col];
-                liveNeighbours = this.getLiveNeighbours(cell.row, cell.col).size;
-
+                liveNeighbours = this.getLiveNeighbours(cell.row, cell.col);
                 if (cell.alive && (liveNeighbours === 2 || liveNeighbours === 3)) { // 1
                     holder[row][col] = 1;
-                }
-                else if (cell.alive) { // 2
+                } else if (cell.alive) { // 2
                     holder[row][col] = 0;
                 } else if (liveNeighbours === 3) { // 3
                     holder[row][col] = 1;
@@ -98,5 +90,11 @@ export default class CellManager {
                 .forEach((_, col) =>
                     this.getCell(row, col).switch(holder[row][col] > 0)
                 ))
+    }
+
+    public clear(): void {
+        this._cells.forEach((_: Cell[], row: number) => _.forEach((_: Cell, col: number) =>
+            this.getCell(row, col).switch(false)
+        ));
     }
 }

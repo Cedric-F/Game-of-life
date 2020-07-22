@@ -17,8 +17,22 @@ export class Canvas extends Component<any, any> {
         }
     }
 
+    /**
+     * Update the model every round.
+     * @param prevProps
+     * @param prevState
+     * @param snapshot
+     */
     componentDidUpdate(prevProps: Readonly<any>, prevState: Readonly<any>, snapshot?: any) {
-        if (prevProps.count < this.props.count) this.manager.update();
+        if (prevProps.count < this.props.count) {
+            this.manager.update();
+        }
+        if (prevProps.clear < this.props.clear) {
+            console.log("clearing");
+            this.manager.clear();
+            this.manager.update();
+            console.log("cleared")
+        }
     }
 
     /**
@@ -28,19 +42,22 @@ export class Canvas extends Component<any, any> {
      */
     render() {
         const { size, scale } = this.props;
+        const { generation } = this.state;
+        let key = 0;
         return (
             <div className="canvas">
                 <Stage width={size} height={size}>
                     <Layer width={size} height={size}>
-                        {[...this.state.generation].map((e: Array<Cell>, row: number) => [...e].map((cell: Cell, col: number) => {
+                        {[...generation].map((e: Array<Cell>, row: number) => [...e].map((cell: Cell, col: number) => {
+                            let live: boolean = cell.alive;
                             return <Rect
-                                key={row + col}
+                                key={key++}
                                 name={"Cell_" + (row + col)}
                                 width={scale}
                                 height={scale}
                                 x={cell.col * scale}
                                 y={cell.row * scale}
-                                fill={cell.alive ? "black" : "white"}
+                                fill={live ? "black" : "white"}
                                 stroke={"grey"}
                                 strokeWidth={1}
                                 onClick={() => this.switch(cell)}
@@ -52,6 +69,11 @@ export class Canvas extends Component<any, any> {
         );
     }
 
+    /**
+     * Manual seeding
+     * Allows to turn on and off cells manually to create patterns.
+     * @param cell a cell that has been clicked on.
+     */
     private switch(cell: Cell) {
         cell.switch(!cell.alive);
         this.setState({generation: this.manager.cells});
