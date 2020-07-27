@@ -25,7 +25,7 @@ _**Dependencies and local use**_
 
 _**Production build**_
 
-Using this **[Live Page](https://cedric-f.github.io/Game-of-life/)** is recommended.
+Using this **[Live Page](https://cedric-f.github.io/Game-of-Life/)** is recommended.
 
 ## License
 
